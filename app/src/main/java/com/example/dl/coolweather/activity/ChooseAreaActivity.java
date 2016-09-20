@@ -2,7 +2,10 @@ package com.example.dl.coolweather.activity;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.Window;
@@ -49,12 +52,25 @@ public class ChooseAreaActivity extends Activity {
     private City currentCity;
     private int currentLeaver;
 
+    private boolean isFromActivity;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        isFromActivity=getIntent().getBooleanExtra("from_weather_activity",false);
+
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        final boolean city_selected=preferences.getBoolean("city_selected",false);
+        //首先判断是否是从WeatherActivity跳转过来的，如果不是，并且已经选择过城市就直接跳转到天气显示界面
+        if(!isFromActivity&&city_selected){
+            Intent intent =new Intent(this,WeatherActivity.class);
+            startActivity(intent);
+            finish();
+            return;
+        }
+
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_choose_area);
-
         initView();//初始化布局
         coolWeatherDB=CoolWeatherDB.getInstance(this);//获取db的实例
 
@@ -69,6 +85,13 @@ public class ChooseAreaActivity extends Activity {
                 }else if (currentLeaver==LEAVER_CITY){
                     currentCity=cityList.get(i);
                     queryCounties();
+                }else if(currentLeaver==LEAVER_COUNTY){
+                    County county = countyList.get(i);
+                    String countyCode = county.getCountyCode();
+                    Intent intent=new Intent(ChooseAreaActivity.this,WeatherActivity.class);
+                    intent.putExtra("countyCode",countyCode);
+                    startActivity(intent);
+                    finish();
                 }
             }
         });
@@ -164,7 +187,7 @@ public class ChooseAreaActivity extends Activity {
                     result=Utility.handleProvincesResponse(coolWeatherDB,data);
                 }else if ("city".equals(type)){
                     result=Utility.handleCityResponse(coolWeatherDB,data,currentProvince.getId());
-                }else if ("city".equals(type)){
+                }else if ("county".equals(type)){
                     result=Utility.handleCountyResponse(coolWeatherDB,data,currentCity.getId());
                 }
                 if(result){
@@ -176,7 +199,7 @@ public class ChooseAreaActivity extends Activity {
                                 queryProivinces();
                             }else if ("city".equals(type)){
                                 queryCities();
-                            }else if ("city".equals(type)){
+                            }else if ("county".equals(type)){
                                 queryCounties();
                             }
                         }
@@ -230,6 +253,10 @@ public class ChooseAreaActivity extends Activity {
         }else if(currentLeaver==LEAVER_CITY){
             queryProivinces();
         }else{
+            if(isFromActivity){//如果是从WeatherActivity跳转过来的，则返回WeatherActivity
+                Intent intent=new Intent(this,WeatherActivity.class);
+                startActivity(intent);
+            }
             finish();
         }
 
