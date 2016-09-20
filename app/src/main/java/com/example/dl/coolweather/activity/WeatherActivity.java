@@ -14,6 +14,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.dl.coolweather.R;
+import com.example.dl.coolweather.service.AutoUpdateService;
 import com.example.dl.coolweather.util.HttpUtil;
 import com.example.dl.coolweather.util.Utility;
 
@@ -97,6 +98,8 @@ public class WeatherActivity extends AppCompatActivity implements View.OnClickLi
         weatherInfoLayout.setVisibility(View.VISIBLE);
         cityNameText.setVisibility(View.VISIBLE);
 
+        Intent intent=new Intent(this, AutoUpdateService.class);//当展示完天气信息的时候就去开启一个服务
+        startService(intent);
     }
 
     /**
